@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 
+import api from './services/api';
+
 import {
   SafeAreaView,
   View,
@@ -14,13 +16,25 @@ export default function App() {
   const [repositories, setRepositories] = useState([]);
 
   useEffect(() => {
-    api.get('repositories').then(response =>{
+    api.get('/repositories').then(response =>{
       setRepositories(response.data);
     });
-  });
+  }, []);
 
   async function handleLikeRepository(id) {
+    const response = await api.post(`/repositories/${id}/like`);
+    
+    const likedRepository = response.data;
 
+    const repositoriesUpdated = repositories.map(repository =>{
+      if(repository.id === id){
+        return likedRepository;
+      }else{
+        return repository;
+      }
+    });
+
+    setRepositories(repositoriesUpdated);
   }
 
   return (
@@ -33,17 +47,13 @@ export default function App() {
           renderItem={({item: repository}) =>(
             <View style={styles.repositoryContainer}>
               <Text style={styles.repository}>{repository.title}</Text>
-              <FlatList
-                data={repository.techs}
-                keyExtractor={repository => techs}
-                renderItem={({item: tech}) =>(
-                  <View style={styles.techsContainer}>
-                    <Text style={styles.tech}>
-                      {tech}
-                    </Text>
-                  </View>
-                  )}
-              />
+              <View style={styles.techsContainer}>
+                {repository.techs.map(tech =>(
+                  <Text key={tech} style={styles.tech}>
+                    {tech}
+                  </Text>
+                ))}
+              </View>
 
               <View style={styles.likesContainer}>
                 <Text
